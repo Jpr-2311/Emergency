@@ -5,7 +5,7 @@ export default function Analytics() {
   const [recommendations, setRecommendations] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5001/recommendations")
+    fetch(`${import.meta.env.VITE_API_URL}/recommendations`)
       .then(res => res.json())
       .then(data => setRecommendations(data))
       .catch(console.error);

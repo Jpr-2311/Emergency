@@ -33,13 +33,12 @@ export default function ReportPothole() {
       formData.append("lat", location.lat);
       formData.append("lng", location.lon);
 
-      const res = await fetch("http://localhost:5001/report-pothole", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/report-pothole`, {
         method: "POST",
         body: formData,
       });
 
       const aiData = await res.json();
-      console.log("AI Response:", aiData);
 
       // 2️⃣ Calculate coins
       const confidence = parseFloat(aiData.confidence) || 0;
@@ -55,7 +54,7 @@ export default function ReportPothole() {
       const userData = userSnap.val();
 
       // 3.5️⃣ Generate Automated Complaint Route (Feature 1 & 7)
-      const complaintRes = await fetch("http://localhost:5001/generate-complaint", {
+      const complaintRes = await fetch(`${import.meta.env.VITE_API_URL}/generate-complaint`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

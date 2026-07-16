@@ -4,7 +4,7 @@ export default function HospitalIntelligence() {
   const [hospitals, setHospitals] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5001/hospitals")
+    fetch(`${import.meta.env.VITE_API_URL}/hospitals`)
       .then(res => res.json())
       .then(data => setHospitals(data))
       .catch(console.error);

@@ -7,7 +7,7 @@ export default function ControlCenter() {
 
   useEffect(() => {
     // Fetch mock IoT sensor alerts from Node server
-    fetch("http://localhost:5001/iot/sensors")
+    fetch(`${import.meta.env.VITE_API_URL}/iot/sensors`)
       .then(res => res.json())
       .then(data => setAlerts(data))
       .catch(console.error);
@@ -17,8 +17,8 @@ export default function ControlCenter() {
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
       <div className="flex-1 p-8 space-y-8">
-        <h1 className="text-3xl font-bold text-gray-800">Emergency Control Center</h1>
-        <p className="text-gray-600">Live monitoring of crisis situations and resource allocation.</p>
+        <h1 className="text-3xl font-bold text-gray-800">CrisisIQ Emergency Control Center</h1>
+        <p className="text-gray-600">AI-Powered Government Crisis Management Platform</p>
         
         {/* Alerts Section */}
         <div className="bg-red-50 p-6 rounded-2xl border border-red-200">

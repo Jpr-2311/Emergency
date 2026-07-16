@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { ref, get } from "firebase/database";
+import { ref, onValue } from "firebase/database";
 import { auth, db } from "./firebase";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -22,17 +22,44 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        const snapshot = await get(ref(db, `users/${currentUser.uid}/role`));
-        setRole(snapshot.exists() ? snapshot.val() : "informer");
-      } else {
+    let roleUnsubscribe = null;
+
+    const authUnsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      try {
+        setUser(currentUser);
+        if (currentUser) {
+          const userRef = ref(db, `users/${currentUser.uid}`);
+          roleUnsubscribe = onValue(userRef, (snapshot) => {
+            if (snapshot.exists()) {
+              const data = snapshot.val();
+              const userRole = data.role || "informer";
+              setRole(userRole);
+              localStorage.setItem("role", userRole);
+              localStorage.setItem("username", data.username || "User");
+            } else {
+              setRole("informer"); // Fallback if no DB record yet
+              localStorage.setItem("role", "informer");
+            }
+            setLoading(false);
+          });
+        } else {
+          setRole(null);
+          localStorage.removeItem("role");
+          localStorage.removeItem("username");
+          localStorage.removeItem("userId");
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Auth state or role fetch error:", error);
         setRole(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
-    return () => unsubscribe();
+
+    return () => {
+      authUnsubscribe();
+      if (roleUnsubscribe) roleUnsubscribe();
+    };
   }, []);
 
   if (loading || (user && role === null)) {
@@ -60,54 +87,57 @@ function App() {
         {/* Admin Only */}
         <Route
           path="/admin"
-          element={user && role === "admin" ? <Admin /> : <Navigate to="/login" />}
+          element={user ? (role === "admin" ? <Admin /> : <Navigate to={homeRoute} />) : <Navigate to="/login" />}
         />
 
         {/* Informer Only */}
         <Route
           path="/dashboard"
-          element={user && role !== "admin" ? <Dashboard /> : <Navigate to={homeRoute} />}
+          element={user ? (role === "informer" ? <Dashboard /> : <Navigate to={homeRoute} />) : <Navigate to="/login" />}
         />
         <Route
           path="/reports"
-          element={user && role !== "admin" ? <MyReports /> : <Navigate to={homeRoute} />}
+          element={user ? (role === "informer" ? <MyReports /> : <Navigate to={homeRoute} />) : <Navigate to="/login" />}
         />
         <Route
           path="/profile"
-          element={user && role !== "admin" ? <Profile /> : <Navigate to={homeRoute} />}
+          element={user ? <Profile /> : <Navigate to="/login" />}
         />
         <Route
           path="/map"
-          element={user && role !== "admin" ? <MapView /> : <Navigate to={homeRoute} />}
+          element={user ? (role === "informer" ? <MapView /> : <Navigate to={homeRoute} />) : <Navigate to="/login" />}
         />
 
         {/* Officer Only */}
         <Route
           path="/officer"
-          element={user && role === "officer" ? <OfficerPortal /> : <Navigate to={homeRoute} />}
+          element={user ? (role === "officer" ? <OfficerPortal /> : <Navigate to={homeRoute} />) : <Navigate to="/login" />}
         />
 
         {/* Control Center Only */}
         <Route
           path="/control-center"
-          element={user && role === "control_center" ? <ControlCenter /> : <Navigate to={homeRoute} />}
+          element={user ? (role === "control_center" ? <ControlCenter /> : <Navigate to={homeRoute} />) : <Navigate to="/login" />}
         />
         
         {/* Analytics (Admin or Control Center) */}
         <Route
           path="/analytics"
-          element={user && (role === "admin" || role === "control_center") ? <Analytics /> : <Navigate to={homeRoute} />}
+          element={user ? ((role === "admin" || role === "control_center") ? <Analytics /> : <Navigate to={homeRoute} />) : <Navigate to="/login" />}
         />
 
-        {/* Copilot and Replay (Admin Only for Demo) */}
+        {/* Copilot and Replay (Admin, Informer, Control Center) */}
         <Route
           path="/copilot"
-          element={user && role === "admin" ? <CopilotPortal /> : <Navigate to={homeRoute} />}
+          element={user ? ((role === "admin" || role === "control_center" || role === "informer") ? <CopilotPortal /> : <Navigate to={homeRoute} />) : <Navigate to="/login" />}
         />
         <Route
           path="/incident-replay"
-          element={user && role === "admin" ? <IncidentReplay /> : <Navigate to={homeRoute} />}
+          element={user ? ((role === "admin" || role === "control_center" || role === "informer") ? <IncidentReplay /> : <Navigate to={homeRoute} />) : <Navigate to="/login" />}
         />
+
+        {/* Catch-all */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );

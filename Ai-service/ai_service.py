@@ -1,11 +1,40 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
 from PIL import Image
 import torch
 import torchvision.transforms as transforms
 import torchvision.models as models
 import io
+import os
+from google import genai
+from dotenv import load_dotenv
+
+# Force reload the environment variable from .env to override any stale shell variables
+load_dotenv(override=True)
+
+# Read the API key securely from the environment
+gemini_api_key = os.environ.get("GEMINI_API_KEY", "")
+if gemini_api_key:
+    # Initialize the modern SDK client
+    client = genai.Client(api_key=gemini_api_key)
+else:
+    client = None
 
 app = FastAPI()
+
+# Enable CORS for the React frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "AI Service"}
 
 model = models.mobilenet_v2(pretrained=True)
 model.eval()
@@ -142,27 +171,81 @@ async def predict_risk(data: RoadData):
 
 class CopilotQuery(BaseModel):
     query: str
+    context: Optional[dict] = None
 
 @app.post("/copilot/query")
 async def copilot_query(data: CopilotQuery):
-    # Mock LLM Assistant (Feature 3)
-    q = data.query.lower()
+    q = data.query.strip()
     
-    if "urgent repair" in q or "prioritized" in q:
-        reply = "Currently, MG Road and Highway Junction need urgent repair due to severe pothole reports intersecting with active ambulance routes. I recommend assigning these to the PWD immediately."
-    elif "five days" in q or "older than" in q:
-        reply = "I found 3 unresolved complaints older than five days. Two are in the Edappally district, assigned to Municipality engineers who currently have high workloads."
-    elif "additional ambulances" in q or "fastest ambulance" in q:
-        reply = "Based on current hospital capacities, City Hospital has reached 90% ICU capacity. I recommend deploying two additional ambulances near Aster Medcity where triage wait times are lower (under 10 mins)."
-    elif "accident hotspots" in q or "predict" in q:
-        reply = "Predicting tomorrow's hotspots: The NH Bypass junction has an 85% probability of severe congestion and road failure due to predicted heavy rainfall (50mm+) and existing moderate damage."
-    elif "backlog" in q:
-        reply = "Ernakulam North district has the highest repair backlog (14 pending issues). The average repair time there has increased to 72 hours."
-    elif "summary" in q:
-        reply = "Today's Summary: 12 new complaints received (4 Severe, 8 Moderate). 5 repairs completed. 2 Flood alerts active. All critical hospital routes remain clear."
-    else:
-        reply = f"Based on current real-time analytics, I recommend monitoring the situation. (Assumption: Historical data for '{data.query}' is currently sparse, so I am analyzing live IoT streams instead)."
+    # Graceful fallback if API key is missing
+    if not client:
+        return {
+            "response": "⚠️ **System Notice:** The AI Emergency Copilot requires a valid `GEMINI_API_KEY` to process live queries. Please add your key to the backend environment variables to enable real-time analytical capabilities. (Current behavior: LLM Disabled)."
+        }
+    
+    try:
+        # We define a strict System Prompt for the LLM to understand its role
+        system_prompt = (
+            "You are the AI Emergency Copilot for the Government Crisis Management Platform.\n"
+            "Answer ONLY using the provided LIVE PROJECT DATA. Do not invent entities.\n"
+            "If no active incidents exist, output EXACTLY: 'No critical incidents require immediate intervention today.'\n\n"
+            "FORMATTING RULES:\n"
+            "1. Use clear Markdown sections with these EXACT emojis and headings (do not use ##, just output the text as H2):\n"
+            "   ## 🚨 Emergency Operations Summary\n"
+            "   ## 🛣️ Active Road Repairs\n"
+            "   ## 👷 Officer Assignments\n"
+            "   ## 🏥 Hospital Status\n"
+            "   ## 🚑 Ambulance Status\n"
+            "   ## 🤖 AI Recommendation\n"
+            "2. Keep responses highly concise, scannable, and professional. Avoid long paragraphs.\n"
+            "3. MUST use Markdown Tables when listing multiple roads, complaints, or officers.\n"
+            "4. Priority levels MUST be written exactly as [High], [Medium], or [Low] so the UI can colorize them.\n"
+            "5. Briefly explain AI Priority Scores (e.g., traffic, severity, proximity) inside the tables or summary.\n"
+            "6. Always end your response with the '## 🤖 AI Recommendation' section suggesting the next best action."
+        )
         
-    return {
-        "response": reply
-    }
+        # Inject context if provided
+        context_str = ""
+        if data.context:
+            import json
+            context_str = "\n\n=== LIVE PROJECT DATA ===\n" + json.dumps(data.context, indent=2) + "\n=========================\n\n"
+        
+        full_prompt = f"{context_str}User Query: {q}"
+        
+        # Using Gemini Flash Latest with the modern SDK
+        response = client.models.generate_content(
+            model='gemini-flash-latest',
+            contents=full_prompt,
+            config=genai.types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                temperature=0.7
+            )
+        )
+        
+        reply = response.text
+        
+        return {
+            "response": reply
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Copilot Error: {e}")
+        return {
+            "response": "An error occurred while connecting to the AI Copilot reasoning engine. Please try again later or check your API key validity."
+        }
+
+@app.get("/api/test-gemini")
+async def test_gemini():
+    """Independent health-check endpoint to verify Gemini API integration"""
+    if not client:
+        return {"status": "error", "message": "API key not configured."}
+    
+    try:
+        response = client.models.generate_content(
+            model='gemini-flash-latest',
+            contents="Say 'Integration successful!' and list 3 random emergency vehicles."
+        )
+        return {"status": "success", "response": response.text}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}

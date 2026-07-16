@@ -29,9 +29,6 @@ export default function SignUp() {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
 
-console.log("UID:", user.uid);
-console.log("Database:", db);
-
 try {
   await set(ref(db, `users/${user.uid}`), {
     username: formData.username ?? "Anonymous",
@@ -41,8 +38,6 @@ try {
     reports: 0,
     joinedAt: Date.now()
   });
-
-  console.log("✅ Database write successful");
 
 } catch (err) {
   console.error("❌ Database write failed");
@@ -70,9 +65,12 @@ try {
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          Create an Account
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">
+          Create a CrisisIQ Account
         </h2>
+        <p className="text-sm text-center text-gray-500 mb-6 font-medium">
+          AI-Powered Government Crisis Management Platform
+        </p>
 
         <div className="mb-4">
           <input

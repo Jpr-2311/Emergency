@@ -64,8 +64,8 @@ export default function IncidentReplay() {
         
         <div className="flex justify-between items-center mb-6">
             <div>
-                <h1 className="text-3xl font-bold text-gray-800">AI Incident Replay & Decision Simulator</h1>
-                <p className="text-gray-600">Visual reconstruction of the emergency lifecycle and "What If?" analysis.</p>
+                <h1 className="text-3xl font-bold text-gray-800">CrisisIQ Incident Replay & Decision Simulator</h1>
+                <p className="text-gray-600">Visual reconstruction of the emergency lifecycle | AI-Powered Government Crisis Management Platform</p>
             </div>
             
             {/* Simulator Controls */}

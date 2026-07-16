@@ -23,7 +23,7 @@ export default function Leaderboard() {
       const userArray = Object.entries(data).map(([id, value]) => ({
         id,
         ...value
-      }));
+      })).filter(u => !u.role || u.role === "informer");
 
       // 🏆 Sort Logic:
       // 1️⃣ Coins DESC

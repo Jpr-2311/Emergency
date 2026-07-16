@@ -248,12 +248,13 @@ function DonorTransportPanel() {
 
 // ─── Main Admin Page ──────────────────────────────────────────────────────
 export default function Admin() {
-    const [mode, setMode] = useState("select");
+    const [mode, setMode] = useState("command_center");
     const navigate = useNavigate();
 
     const handleLogout = async () => {
         await signOut(auth);
         localStorage.clear();
+        sessionStorage.clear();
         navigate("/login");
     };
 
@@ -273,12 +274,13 @@ export default function Admin() {
                 {/* Header */}
                 <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-blue-600">🛡️ Admin Dashboard</h1>
-                        <p className="text-gray-400 text-sm mt-1">Manage dispatch, potholes, and leaderboard</p>
+                        <h1 className="text-2xl font-bold text-blue-600">🛡️ CrisisIQ Admin</h1>
+                        <p className="text-gray-400 text-sm mt-1">Smart Emergency Response & Infrastructure Intelligence</p>
                     </div>
 
                     {/* Nav tabs + Logout */}
                     <div className="flex flex-wrap gap-2 items-center">
+                        {navBtn("🏢 Command Center", "command_center", "bg-gray-800")}
                         {navBtn("🚨 Accident", "accident", "bg-red-600")}
                         {navBtn("🫀 Donor Transport", "donor", "bg-purple-600")}
                         {navBtn("🕳️ Pothole Reports", "potholes", "bg-orange-500")}
@@ -293,52 +295,105 @@ export default function Admin() {
                     </div>
                 </div>
 
-                {/* ── Mode: Select (landing) ── */}
-                {mode === "select" && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <button
-                            onClick={() => setMode("accident")}
-                            className="bg-white rounded-2xl shadow-sm p-8 text-left hover:shadow-md hover:border-red-200 border-2 border-transparent transition group"
-                        >
-                            <div className="text-4xl mb-3">🚨</div>
-                            <h2 className="text-xl font-bold text-gray-800 group-hover:text-red-600 transition">Accident / Emergency</h2>
-                            <p className="text-gray-500 text-sm mt-1">
-                                Dispatch ambulance from current location to nearest hospital. Uses full pothole-aware routing.
-                            </p>
-                        </button>
+                {/* ── Mode: Command Center (landing) ── */}
+                {mode === "command_center" && (
+                    <div className="space-y-6">
+                        {/* KPIs */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-red-100">
+                                <h3 className="text-xs font-semibold text-gray-500 uppercase">Active Emergencies</h3>
+                                <p className="text-2xl font-bold text-red-600 mt-1">2</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-orange-100">
+                                <h3 className="text-xs font-semibold text-gray-500 uppercase">Pending Complaints</h3>
+                                <p className="text-2xl font-bold text-orange-600 mt-1">14</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-blue-100">
+                                <h3 className="text-xs font-semibold text-gray-500 uppercase">Ambulances Active</h3>
+                                <p className="text-2xl font-bold text-blue-600 mt-1">5</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-green-100">
+                                <h3 className="text-xs font-semibold text-gray-500 uppercase">Hospitals Online</h3>
+                                <p className="text-2xl font-bold text-green-600 mt-1">3</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-purple-100">
+                                <h3 className="text-xs font-semibold text-gray-500 uppercase">Officers Available</h3>
+                                <p className="text-2xl font-bold text-purple-600 mt-1">8</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-indigo-100">
+                                <h3 className="text-xs font-semibold text-gray-500 uppercase">AI Predictions</h3>
+                                <p className="text-2xl font-bold text-indigo-600 mt-1">142</p>
+                            </div>
+                        </div>
 
-                        <button
-                            onClick={() => setMode("donor")}
-                            className="bg-white rounded-2xl shadow-sm p-8 text-left hover:shadow-md hover:border-purple-200 border-2 border-transparent transition group"
-                        >
-                            <div className="text-4xl mb-3">🫀</div>
-                            <h2 className="text-xl font-bold text-gray-800 group-hover:text-purple-600 transition">Donor Transport</h2>
-                            <p className="text-gray-500 text-sm mt-1">
-                                Route an ambulance between two hospitals for organ or donor transfer.
-                            </p>
-                        </button>
+                        {/* Central View */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Live Crisis Map */}
+                            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col h-[500px]">
+                                <div className="bg-gray-900 text-white px-6 py-3 text-sm font-semibold flex justify-between items-center">
+                                    <span>🌐 Live Crisis Map</span>
+                                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-md">System Optimal</span>
+                                </div>
+                                <div className="flex-1 bg-gray-100 relative">
+                                    <MapView />
+                                </div>
+                            </div>
 
-                        <button
-                            onClick={() => setMode("potholes")}
-                            className="bg-white rounded-2xl shadow-sm p-8 text-left hover:shadow-md hover:border-orange-200 border-2 border-transparent transition group"
-                        >
-                            <div className="text-4xl mb-3">🕳️</div>
-                            <h2 className="text-xl font-bold text-gray-800 group-hover:text-orange-500 transition">Pothole Reports</h2>
-                            <p className="text-gray-500 text-sm mt-1">
-                                Review, approve, or update the status of community pothole reports.
-                            </p>
-                        </button>
+                            {/* AI Copilot Mini */}
+                            <div className="bg-white rounded-2xl shadow-sm border overflow-hidden flex flex-col h-[500px]">
+                                <div className="bg-blue-600 text-white px-6 py-3 text-sm font-semibold flex justify-between items-center">
+                                    <span>🤖 AI Emergency Copilot</span>
+                                </div>
+                                <div className="flex-1 p-4 bg-gray-50 flex flex-col justify-end space-y-4">
+                                    <div className="bg-blue-100 text-blue-900 p-3 rounded-xl rounded-bl-none text-sm self-start max-w-[85%]">
+                                        Command Center AI active. How can I assist with crisis management today?
+                                    </div>
+                                    <button 
+                                      onClick={() => navigate('/copilot')}
+                                      className="w-full bg-white border border-blue-200 text-blue-600 font-semibold p-3 rounded-xl shadow-sm hover:bg-blue-50 transition text-sm flex items-center justify-center gap-2"
+                                    >
+                                        Open Full Copilot Interface →
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
-                        <button
-                            onClick={() => setMode("leaderboard")}
-                            className="bg-white rounded-2xl shadow-sm p-8 text-left hover:shadow-md hover:border-green-200 border-2 border-transparent transition group"
-                        >
-                            <div className="text-4xl mb-3">🏆</div>
-                            <h2 className="text-xl font-bold text-gray-800 group-hover:text-green-600 transition">Leaderboard</h2>
-                            <p className="text-gray-500 text-sm mt-1">
-                                View top contributors ranked by coins earned from pothole reports.
-                            </p>
-                        </button>
+                        {/* Bottom Row */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Quick Actions */}
+                            <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+                                <h3 className="font-bold text-gray-800">⚡ Quick Actions</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button onClick={() => navigate('/incident-replay')} className="p-4 bg-gray-50 border hover:border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 transition group">
+                                        <span className="text-2xl group-hover:scale-110 transition">⏪</span>
+                                        <span className="text-sm font-semibold text-gray-700">Incident Replay</span>
+                                    </button>
+                                    <button onClick={() => setMode('accident')} className="p-4 bg-gray-50 border hover:border-red-300 rounded-xl flex flex-col items-center justify-center gap-2 transition group">
+                                        <span className="text-2xl group-hover:scale-110 transition">🚨</span>
+                                        <span className="text-sm font-semibold text-gray-700">Dispatch Unit</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Notifications */}
+                            <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+                                <h3 className="font-bold text-gray-800">🔔 Recent Alerts</h3>
+                                <div className="space-y-3">
+                                    <div className="p-3 bg-red-50 text-red-800 text-sm rounded-lg border border-red-100 flex items-start gap-3">
+                                        <span className="mt-0.5">⚠️</span>
+                                        <p>Severe pothole detected on MG Road intersecting ambulance route.</p>
+                                    </div>
+                                    <div className="p-3 bg-orange-50 text-orange-800 text-sm rounded-lg border border-orange-100 flex items-start gap-3">
+                                        <span className="mt-0.5">🌧️</span>
+                                        <p>High rainfall predicted in Ernakulam. Flood risk elevated.</p>
+                                    </div>
+                                    <div className="p-3 bg-blue-50 text-blue-800 text-sm rounded-lg border border-blue-100 flex items-start gap-3">
+                                        <span className="mt-0.5">ℹ️</span>
+                                        <p>Aster Medcity ICU capacity at 85%.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 )}
 

@@ -51,9 +51,12 @@ export default function Login() {
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          Login to Your Account
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">
+          Login to CrisisIQ
         </h2>
+        <p className="text-sm text-center text-gray-500 mb-6 font-medium">
+          AI-Powered Government Crisis Management Platform
+        </p>
 
         <div className="mb-4">
           <input

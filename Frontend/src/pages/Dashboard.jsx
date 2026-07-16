@@ -77,7 +77,7 @@ export default function Dashboard() {
               {greeting}, {username} 👋
             </h1>
             <p className="text-gray-500 mt-2">
-              Helping you build better cities.
+              AI-Powered Government Crisis Management Platform
             </p>
           </div>
 

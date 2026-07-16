@@ -12,9 +12,12 @@ app.use(express.json());
 const upload = multer({ dest: "uploads/" });
 
 app.get("/", (req, res) => {
-    // console.log("Hello world");
     res.send("Hello world");
-})
+});
+
+app.get("/health", (req, res) => {
+    res.json({ status: "ok", service: "Node Backend" });
+});
 const MERGE_DISTANCE_METERS = 50;
 const potholes = [];
 
@@ -31,7 +34,7 @@ app.post("/report-pothole", upload.array("images", 3), async (req, res) => {
         });
 
         const aiRes = await axios.post(
-            "http://127.0.0.1:8000/predict",
+            `${process.env.AI_SERVICE_URL || "http://127.0.0.1:8000"}/predict`,
             form,
             { headers: form.getHeaders() }
         );
@@ -226,8 +229,9 @@ app.get("/iot/sensors", (req, res) => {
     ]);
 });
 
-app.listen(5001, () => {
-    console.log("Node server running on http://localhost:5001");
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+    console.log(`Node server running on port ${PORT}`);
 });
 // setInterval(() => {
 //   console.log("backend alive");
