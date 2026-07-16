@@ -257,7 +257,7 @@ const HOSPITAL_NAMES = {
 
 function MapView({ donorMode = false, donorFrom = null, donorTo = null }) {
   // const SERVER = "http://10.72.217.227:5001/";
-  const SERVER = "http://10.72.217.227:5001";
+  const SERVER = import.meta.env.VITE_API_URL;
   const center = [9.9930419, 76.3017048];
 
   const [selectedHospital, setSelectedHospital] = useState(null);
