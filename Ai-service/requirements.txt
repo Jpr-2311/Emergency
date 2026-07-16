@@ -1,5 +1,8 @@
 fastapi
 uvicorn
+google-genai
+python-dotenv
+pydantic
 torch
 torchvision
 pillow
