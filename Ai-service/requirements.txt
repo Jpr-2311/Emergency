@@ -3,6 +3,7 @@ uvicorn
 google-genai
 python-dotenv
 pydantic
+python-multipart
 torch
 torchvision
 pillow
