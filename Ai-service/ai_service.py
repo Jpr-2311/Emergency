@@ -214,7 +214,7 @@ async def copilot_query(data: CopilotQuery):
         
         # Using Gemini Flash Latest with the modern SDK
         response = client.models.generate_content(
-            model='gemini-flash-latest',
+            model="gemini-2.5-flash",
             contents=full_prompt,
             config=genai.types.GenerateContentConfig(
                 system_instruction=system_prompt,
