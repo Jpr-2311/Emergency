@@ -7,6 +7,7 @@ import torchvision.transforms as transforms
 import torchvision.models as models
 import io
 import os
+import time
 from google import genai
 from dotenv import load_dotenv
 
@@ -212,15 +213,25 @@ async def copilot_query(data: CopilotQuery):
         
         full_prompt = f"{context_str}User Query: {q}"
         
-        # Using Gemini Flash Latest with the modern SDK
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=full_prompt,
-            config=genai.types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                temperature=0.7
-            )
-        )
+        # Using Gemini Flash Lite with retry mechanism
+        response = None
+        for attempt in range(3):
+            try:
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash-lite",
+                    contents=full_prompt,
+                    config=genai.types.GenerateContentConfig(
+                        system_instruction=system_prompt,
+                        temperature=0.7
+                    )
+                )
+                break
+            except Exception as e:
+                error_str = str(e).upper()
+                if attempt < 2 and ("503" in error_str or "UNAVAILABLE" in error_str or "529" in error_str):
+                    time.sleep(2)
+                else:
+                    raise e
         
         reply = response.text
         
