@@ -218,7 +218,7 @@ async def copilot_query(data: CopilotQuery):
         for attempt in range(3):
             try:
                 response = client.models.generate_content(
-                    model="gemini-2.5-flash-lite",
+                    model="gemini-2.0-flash",
                     contents=full_prompt,
                     config=genai.types.GenerateContentConfig(
                         system_instruction=system_prompt,
